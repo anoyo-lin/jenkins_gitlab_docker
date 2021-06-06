@@ -1,0 +1,25 @@
+FROM jenkins/jenkins:2.222.4-lts-centos7
+#adding docker binary to play docker in docker trick
+COPY --chown=jenkins:jenkins docker /usr/local/bin/
+#sudo chmod 777 /var/run/docker.sock , put the line in jenkins.sh 
+COPY --chown=root:root jenkins.sh /usr/local/bin/
+USER root
+RUN yum -y install sudo
+RUN adduser devops -u 9001 -U && \
+    usermod -aG wheel devops && \
+    usermod -aG jenkins devops && \
+    mkdir -p /home/devops/.m2 && \
+    mkdir -p /home/devops/.npm && \
+    mkdir -p /home/devops/.sonar && \
+    chown -R devops:devops /home/devops && \
+    touch /var/run/docker.sock && \
+    chown jenkins:jenkins /var/run/docker.sock && \
+    chmod 777 /var/run/docker.sock 
+# %wheel        ALL=(ALL) NOPASSWD: ALL
+COPY sudoers /etc/sudoers
+
+RUN mkdir -p /var/jenkins_home/fingerprints && \
+mkdir -p /var/jenkins_home/caches && \
+mkdir -p /var/jenkins_home/jobs && \
+mkdir -p /var/jenkins_home/workspace && \
+chmod -R 777 /var/jenkins_home
